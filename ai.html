@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Travel Planner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #dbeafe, #fff);
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .login-btn {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #1e3a8a;
+      flex-grow: 1;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #3b82f6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+    .chat-box {
+      height: 200px;
+      overflow-y: auto;
+      background: #f3f4f6;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .chat-box p {
+      margin: 5px 0;
+    }
+    .chat-box .bot {
+      color: #1d4ed8;
+    }
+    .trip {
+      background: #eff6ff;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI-Powered Travel Planner</h1>
+    <button class="login-btn" onclick="showLogin()">Login</button>
+  </header>
+
+  <div class="modal hidden" id="loginModal">
+    <div class="modal-content">
+      <h3 id="formTitle">Login</h3>
+      <label>Username</label>
+      <input type="text" id="username">
+      <label>Password</label>
+      <input type="password" id="password">
+      <button onclick="handleAuth()">Submit</button>
+      <p id="authToggle" style="text-align:center; cursor:pointer; color:#2563eb;" onclick="toggleForm()">Don't have an account? Sign up</p>
+    </div>
+  </div>
+
+  <div class="container" id="appContent" style="display: none;">
+    <div class="card">
+      <label for="destination">Destination</label>
+      <input type="text" id="destination" placeholder="Enter your destination...">
+      <label for="dates">Travel Dates</label>
+      <input type="text" id="dates" placeholder="e.g. Apr 20 - Apr 30">
+      <label for="preferences">Preferences</label>
+      <textarea id="preferences" placeholder="What experiences are you looking for?"></textarea>
+      <button onclick="generateItinerary()">Generate Itinerary</button>
+      <p id="itineraryResult"></p>
+    </div>
+
+    <div class="card">
+      <label>Chat with TravelBot</label>
+      <div class="chat-box" id="chatLog"></div>
+      <input type="text" id="chatInput" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <div class="card">
+      <label>Trip History</label>
+      <div id="tripHistory"></div>
+    </div>
+  </div>
+
+  <script>
+    let users = {};
+    let isLogin = true;
+
+    function showLogin() {
+      document.getElementById('loginModal').classList.remove('hidden');
+    }
+
+    function toggleForm() {
+      isLogin = !isLogin;
+      document.getElementById('formTitle').innerText = isLogin ? 'Login' : 'Sign Up';
+      document.getElementById('authToggle').innerText = isLogin
+        ? "Don't have an account? Sign up"
+        : "Already have an account? Login";
+    }
+
+    function handleAuth() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!username || !password) {
+        alert("Please enter both fields.");
+        return;
+      }
+
+      if (isLogin) {
+        if (users[username] && users[username] === password) {
+          alert("Login successful!");
+          document.getElementById('loginModal').classList.add('hidden');
+          document.getElementById('appContent').style.display = 'block';
+        } else {
+          alert("Invalid credentials or user not found.");
+        }
+      } else {
+        if (users[username]) {
+          alert("User already exists!");
+        } else {
+          users[username] = password;
+          alert("Signup successful! You can now log in.");
+          toggleForm();
+        }
+      }
+    }
+
+    function generateItinerary() {
+      const destination = document.getElementById('destination').value;
+      const dates = document.getElementById('dates').value;
+      const preferences = document.getElementById('preferences').value;
+      const itinerary = `Trip to ${destination} from ${dates}. Enjoy experiences like: ${preferences}.`;
+      document.getElementById('itineraryResult').innerText = itinerary;
+
+      const tripCard = document.createElement('div');
+      tripCard.className = 'trip';
+      tripCard.innerHTML = `<strong>Destination:</strong> ${destination}<br><strong>Dates:</strong> ${dates}<br><strong>Preferences:</strong> ${preferences}<br><strong>Itinerary:</strong> ${itinerary}`;
+      document.getElementById('tripHistory').appendChild(tripCard);
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const msg = input.value;
+      if (!msg.trim()) return;
+
+      const userMsg = document.createElement('p');
+      userMsg.innerHTML = `<strong>You:</strong> ${msg}`;
+      document.getElementById('chatLog').appendChild(userMsg);
+
+      const botMsg = document.createElement('p');
+      botMsg.className = 'bot';
+      botMsg.innerHTML = `<strong>TravelBot:</strong> That's interesting! Tell me more about your plans to ${msg}.`;
+      document.getElementById('chatLog').appendChild(botMsg);
+
+      input.value = '';
+      document.getElementById('chatLog').scrollTop = document.getElementById('chatLog').scrollHeight;
+    }
+  </script>
+</body>
+</html>
+ 
